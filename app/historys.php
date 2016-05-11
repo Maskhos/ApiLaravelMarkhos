@@ -4,7 +4,7 @@ namespace App;
 
 use Illuminate\Database\Eloquent\Model;
 
-class history extends Model
+class historys extends Model
 {
   protected $fillable = [
       'hisid','histitle','hisdescription','hisDateEvent','hisshortDescription',

@@ -12,7 +12,7 @@ class User extends Authenticatable
      * @var array
      */
     protected $fillable = [
-        'name', 'email', 'password',
+        'id','remember_token','password','usname', 'uspicture','usbirthDate','country','usadmin','userased','ustwitter','ustwitter','usinstagram','faction_id','ustumblr','usdesc','email','uspassword'
     ];
 
     /**
@@ -21,6 +21,12 @@ class User extends Authenticatable
      * @var array
      */
     protected $hidden = [
-        'password', 'remember_token',
+     'created_at','updated_at'
     ];
+    public function faction()
+    {
+      // 1 usuari te una facio.
+      // $this hace referencia al objeto que tengamos en ese momento de Avión.
+      return $this->belongsTo('App\faction');
+    }
 }

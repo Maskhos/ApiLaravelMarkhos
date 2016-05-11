@@ -4,10 +4,10 @@ namespace App;
 
 use Illuminate\Database\Eloquent\Model;
 
-class post extends Model
+class comments extends Model
 {
   protected $fillable = [
-      'user_id','postitle','posdescription','poscontent','posphoto','posdate','shortdesc','category_id'
+      'comcomment','user_id','post_id',
   ];
 
   /**
@@ -16,7 +16,7 @@ class post extends Model
    * @var array
    */
   protected $hidden = [
-      'posid','created_at','updated_at'
+      'comid','created_at','updated_at'
   ];
   public function user()
   {

@@ -4,10 +4,10 @@ namespace App;
 
 use Illuminate\Database\Eloquent\Model;
 
-class history extends Model
+class faction extends Model
 {
   protected $fillable = [
-      'hisid','histitle','hisdescription','hisDateEvent','hisshortDescription',
+      'facid','facname','facdescription','facshortdescription'
   ];
 
   /**
@@ -16,6 +16,6 @@ class history extends Model
    * @var array
    */
   protected $hidden = [
-      'hisid','created_at','updated_at'
+      'facid','created_at','updated_at'
   ];
 }

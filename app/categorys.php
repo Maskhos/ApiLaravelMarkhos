@@ -4,7 +4,7 @@ namespace App;
 
 use Illuminate\Database\Eloquent\Model;
 
-class category extends Model
+class categorys extends Model
 {
 
       /**
@@ -12,8 +12,10 @@ class category extends Model
        *
        * @var array
        */
+
+
       protected $fillable = [
-          'catname'
+            'catid','catname'
       ];
 
       /**
@@ -22,6 +24,6 @@ class category extends Model
        * @var array
        */
       protected $hidden = [
-          'catid','created_at','updated_at'
+        'created_at','updated_at'
       ];
 }

@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class countrys extends Model
 {
   protected $fillable = [
-    'couid','couname'
+    'id','couname'
   ];
 
   /**
@@ -16,6 +16,6 @@ class countrys extends Model
   * @var array
   */
   protected $hidden = [
-    'created_at','updated_at'
+    'couerased','created_at','updated_at'
   ];
 }

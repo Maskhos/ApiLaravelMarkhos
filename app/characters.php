@@ -13,7 +13,7 @@ class characters extends Model
          * @var array
          */
         protected $fillable = [
-            'charname','charclass','charbio','charage','charportrait','charstylecombat','faction_id','charfacechar'
+            'id','charname','charclass','charbio','charage','charportrait','charstylecombat','faction_id','charfacechar'
         ];
 
         /**
@@ -22,7 +22,7 @@ class characters extends Model
          * @var array
          */
         protected $hidden = [
-            'id'
+             'created_at','updated_at','charerased'
         ];
         // Relación de Avión con Fabricante:
 	public function faction()

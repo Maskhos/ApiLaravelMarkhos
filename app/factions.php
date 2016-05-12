@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class factions extends Model
 {
   protected $fillable = [
-      'facid','facname','facdescription','facshortdescription'
+      'id','facname','facdescription','facshortdescription'
   ];
 
   /**
@@ -16,6 +16,6 @@ class factions extends Model
    * @var array
    */
   protected $hidden = [
-      'created_at','updated_at'
+      'facerased','created_at','updated_at'
   ];
 }

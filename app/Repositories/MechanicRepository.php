@@ -8,19 +8,29 @@ use App\mechanics;
 
 class MechanicRepository
 {
+  /**
+   * Get all of the tasks for a given user.
+   *
+   * @param  User  $user
+   * @return Collection
+   */
+  public function All()
+  {
+      return mechanics::where('mecerased',false)->get();
+  }
+  public function create($request){
 
-    /**
-     * Get all of the tasks for a given user.
-     *
-     * @param  User  $user
-     * @return Collection
-     */
-    public function All()
-    {
-        return mechanics::get();
-    }
-    public function show($id)
-    {
-        return mechanics::where('mecid', $id)->get();
-    }
+    return mechanics::create($request->all());
+  }
+  /**
+   * Get all of the tasks for a given user.
+   *
+   * @param  User  $user
+   * @return Collection
+   */
+
+  public function show($pos)
+  {
+      return mechanics::where('id', $pos)->where('mecerased',false)->get();
+  }
 }

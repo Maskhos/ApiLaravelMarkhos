@@ -15,7 +15,7 @@ class categorys extends Model
 
 
       protected $fillable = [
-            'catid','catname'
+            'id','catname'
       ];
 
       /**
@@ -24,6 +24,6 @@ class categorys extends Model
        * @var array
        */
       protected $hidden = [
-        'created_at','updated_at'
+        'created_at','updated_at','caterased'
       ];
 }

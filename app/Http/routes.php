@@ -14,7 +14,11 @@
  Route::get('/', function () {
      return "(/resource) para encontrar lo que andas buscando";
  });
-
+//PRUEBA
+//GET
+Route::get('/prueba', 'pruebaController@index');
+//POST
+Route::post('/prueba', 'pruebaController@store');
 //CATEGORY
 //GET
 Route::get('/category', 'categoryController@index');
@@ -121,5 +125,12 @@ Route::delete('/user/{user}', 'UserController@delete');
 //PUT
 Route::put('/user/{user}', 'UserController@update');
 Route::patch('/user/{user}', 'UserController@update');
+//LOGINTOWEB
+
+Route::get('/user/{id}/{token}', 'UserController@bytoken');
+
+Route::post('/user/{id}/{token}', 'UserController@remember_token');
+
+Route::post('/user/credentials', 'UserController@login');
 //SHOWTOKEN
 Route::get('/token', 'UserController@token');

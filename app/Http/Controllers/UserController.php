@@ -32,7 +32,9 @@ class UserController extends Controller
       // En code podríamos indicar un código de error personalizado de nuestra aplicación si lo deseamos.
       return response()->json(['errors'=>array(['code'=>404,'message'=>'No se encuentra el usuario a la base de datos.'])],404);
     }
-
+    for ($i=0; $i < count($users); $i++) {
+      $users[$i]->uspicture = 'data: image/jpeg;base64,'. base64_encode($users[$i]->uspicture);
+    }
     return response()->json(['status'=>'ok','data'=>$users],200);
     // echo json_encode();
     //var_dump($this->factions->All());
@@ -69,11 +71,35 @@ public function show($user)
   'faction' => $this->factions->All() ,
 ]);*/
 }
+
+public function login(Request $request){
+  if (!$request->input('email') || !$request->input('password'))
+  {
+    // Se devuelve un array errors con los errores encontrados y cabecera HTTP 422 Unprocessable Entity – [Entidad improcesable] Utilizada para errores de validación.
+    // En code podríamos indicar un código de error personalizado de nuestra aplicación si lo deseamos.
+    return response()->json(['errors'=>array(['code'=>422,'message'=>'Faltan datos necesarios para el proceso de alta.'])],422);
+  }
+  //
+  // return "Se muestra Fabricante con id: $id";
+  // Buscamos un fabricante por el id.
+  $users=$this->user->retrieveByCredentials($request->all());
+
+  // Si no existe ese fabricante devolvemos un error.
+  if (count($users)==0)
+  {
+    // Se devuelve un array errors con los errores encontrados y cabecera HTTP 404.
+    // En code podríamos indicar un código de error personalizado de nuestra aplicación si lo deseamos.
+    return response()->json(['errors'=>array(['code'=>404,'message'=>'No se encuentra el usuario a la base de datos.'])],404);
+  }
+
+  return response()->json(['status'=>'ok','data'=>$users],200);
+
+}
 public function store(Request $request){
   // Primero comprobaremos si estamos recibiendo todos los campos.
   //usname,userdesc,usbirthDate,faction_id,country_id,email,password
   //$request-file para coger imagenes <-QUIM RECUERDA
-  if (!$request->input('usname') || !$request->input('userdesc') || !$request->input('usbirthDate') || !$request->input('faction_id') || !$request->input('country_id') || !$request->input('email') || !$request->input('password'))
+  if (!$request->input('usname') ||  !$request->input('usbirthDate') || !$request->input('faction_id') || !$request->input('country_id') || !$request->input('email') || !$request->input('password'))
   {
     // Se devuelve un array errors con los errores encontrados y cabecera HTTP 422 Unprocessable Entity – [Entidad improcesable] Utilizada para errores de validación.
     // En code podríamos indicar un código de error personalizado de nuestra aplicación si lo deseamos.
@@ -90,6 +116,78 @@ public function store(Request $request){
 
   $response = Response::make(json_encode(['data'=>$newUser]), 201)->header('Location', 'http://www.dominio.local/fabricantes/'.$newUser->id)->header('Content-Type', 'application/json');
   return $response;
+}
+
+
+public function bycredentials(Request $request){
+  //
+  // return "Se muestra Fabricante con id: $id";
+  // Buscamos un fabricante por el id.
+  $users=$this->user->retrieveByCredentials($request->all());
+
+  // Si no existe ese fabricante devolvemos un error.
+  if (count($users)==0)
+  {
+    // Se devuelve un array errors con los errores encontrados y cabecera HTTP 404.
+    // En code podríamos indicar un código de error personalizado de nuestra aplicación si lo deseamos.
+    return response()->json(['errors'=>array(['code'=>404,'message'=>'No se encuentra el usuario a la base de datos.'])],404);
+  }
+
+  return response()->json(['status'=>'ok','data'=>$users],200);
+  // echo json_encode();
+  //var_dump($this->factions->All());
+  /*return view('faction.index', [
+  'faction' => $this->factions->All() ,
+]);*/
+
+}
+
+public function remember_token($id,$token){
+  //
+  // return "Se muestra Fabricante con id: $id";
+  // Buscamos un fabricante por el id.
+  $users=$this->user->updateRememberToken($id,$token);
+
+  // Si no existe ese fabricante devolvemos un error.
+  if (count($users)==0)
+  {
+    // Se devuelve un array errors con los errores encontrados y cabecera HTTP 404.
+    // En code podríamos indicar un código de error personalizado de nuestra aplicación si lo deseamos.
+    return response()->json(['errors'=>array(['code'=>404,'message'=>'No se encuentra el usuario a la base de datos.'])],404);
+  }
+
+  return response()->json(['status'=>'ok','data'=>$users],200);
+  // echo json_encode();
+  //var_dump($this->factions->All());
+  /*return view('faction.index', [
+  'faction' => $this->factions->All() ,
+]);*/
+
+
+}
+
+public function bytoken($id,$token){
+  //
+  // return "Se muestra Fabricante con id: $id";
+  // Buscamos un fabricante por el id.
+  $users=$this->user->retrieveByToken($id,$token);
+
+  // Si no existe ese fabricante devolvemos un error.
+  if (count($users)==0)
+  {
+    // Se devuelve un array errors con los errores encontrados y cabecera HTTP 404.
+    // En code podríamos indicar un código de error personalizado de nuestra aplicación si lo deseamos.
+    return response()->json(['errors'=>array(['code'=>404,'message'=>'No se encuentra el usuario a la base de datos.'])],404);
+  }
+
+  return response()->json(['status'=>'ok','data'=>$users],200);
+  // echo json_encode();
+  //var_dump($this->factions->All());
+  /*return view('faction.index', [
+  'faction' => $this->factions->All() ,
+]);*/
+
+
 }
 /**
 * Update the specified resource in storage.
@@ -109,7 +207,7 @@ public function update(Request $request, $id)
   }
   // Listado de campos recibidos teóricamente.
   //email, redes sociales , contrasenya
-  $picture=$request->input('uspicture');
+  $uspicture=$request->file('uspicture');
   $usbirthDate=$request->input('usbirthdate');
   $country_id=$request->input('country_id');
   $ustumblr=$request->input('ustumblr');
@@ -127,9 +225,9 @@ public function update(Request $request, $id)
     $bandera = false;
 
     // Actualización parcial de campos.
-    if ($picture)
+    if ($uspicture)
     {
-      $users->picture = $picture;
+      $users->uspicture = $uspicture;
       $bandera=true;
     }
 
@@ -212,12 +310,12 @@ public function update(Request $request, $id)
   $password = $request->input('password');
   */
   // Si el método no es PATCH entonces es PUT y tendremos que actualizar todos los datos.
-  if (!$picture || !$usbirthDate || !$country_id || !$ustumblr || !$ustwitter || !$usdesc || !$usfacebook || !$email  || !$usinstagram || !$password)
+  if (!$uspicture || !$usbirthDate || !$country_id || !$ustumblr || !$ustwitter || !$usdesc || !$usfacebook || !$email  || !$usinstagram || !$password)
   {
     // Se devuelve un array errors con los errores encontrados y cabecera HTTP 422 Unprocessable Entity – [Entidad improcesable] Utilizada para errores de validación.
     return response()->json(['errors'=>array(['code'=>422,'message'=>'Faltan valores para completar el procesamiento.'])],422);
   }
-  $users->picture = $picture;
+  $users->uspicture = $uspicture;
   $users->usbirthDate = $usbirthDate;
   $users->country_id = $country_id;
   $users->ustumblr = $ustumblr;

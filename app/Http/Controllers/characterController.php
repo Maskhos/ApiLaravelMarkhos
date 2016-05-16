@@ -14,12 +14,13 @@ class characterController extends Controller
   protected $character;
 
   function __construct(CharacterRepository $characters){
-      $this->character = $characters;
+    $this->character = $characters;
   }
   public function index(Request $request)
   {
 
     $characters = $this->character->All();
+
     // Si no existe ese fabricante devolvemos un error.
     if (count($characters)==0)
     {
@@ -27,7 +28,10 @@ class characterController extends Controller
       // En code podríamos indicar un código de error personalizado de nuestra aplicación si lo deseamos.
       return response()->json(['errors'=>array(['code'=>404,'message'=>'No se encuentra el usuario a la base de datos.'])],404);
     }
-
+    for ($i=0; $i < count($characters); $i++) {
+      $characters[$i]->charportrait = 'data: image/jpeg;base64,'. base64_encode($characters[$i]->charportrait);
+      $characters[$i]->charfacechar = 'data: image/jpeg;base64,'. base64_encode($characters[$i]->charfacechar);
+    }
     return response()->json(['status'=>'ok','data'=>$characters],200);
     // echo json_encode();
     //var_dump($this->characters->All());
@@ -41,9 +45,9 @@ class characterController extends Controller
     /*return view('character.index', [
     'character' => $this->characters->All() ,
   ]);*/
- }
- public function show($character)
- {
+}
+public function show($character)
+{
   //
   // return "Se muestra Fabricante con id: $id";
   // Buscamos un fabricante por el id.
@@ -56,19 +60,22 @@ class characterController extends Controller
     // En code podríamos indicar un código de error personalizado de nuestra aplicación si lo deseamos.
     return response()->json(['errors'=>array(['code'=>404,'message'=>'No se encuentra el usuario a la base de datos.'])],404);
   }
-
+  for ($i=0; $i < count($characters); $i++) {
+    $characters[$i]->charportrait = 'data: image/jpeg;base64,'. base64_encode($characters[$i]->charportrait);
+    $characters[$i]->charfacechar = 'data: image/jpeg;base64,'. base64_encode($characters[$i]->charfacechar);
+  }
   return response()->json(['status'=>'ok','data'=>$characters],200);
   // echo json_encode();
   //var_dump($this->characters->All());
   /*return view('character.index', [
   'character' => $this->characters->All() ,
- ]);*/
- }
- public function store(Request $request){
+]);*/
+}
+public function store(Request $request){
   //`id``facname``facdescription``facshortdescription`
   // Primero comprobaremos si estamos recibiendo todos los campos.
- //`id``charclass``charname``charbio``charbirthdate``charportrait``charstylecombat``faction_id``charfacechar``charerased`
-  if (!$request->input('charclass') || !$request->input('charname') || !$request->input('charbio') || !$request->input('charbirthdate')|| !$request->input('charportrait')|| !$request->input('charfacechar'))
+  //`id``charclass``charname``charbio``charbirthdate``charportrait``charstylecombat``faction_id``charfacechar``charerased`
+  if (!$request->input('charclass') || !$request->input('charname') || !$request->input('charbio') || !$request->input('charbirthdate')|| !$request->file('charportrait')|| !$request->file('charfacechar'))
   {
     // Se devuelve un array errors con los errores encontrados y cabecera HTTP 422 Unprocessable Entity – [Entidad improcesable] Utilizada para errores de validación.
     // En code podríamos indicar u  n código de error personalizado de nuestra aplicación si lo deseamos.
@@ -85,15 +92,15 @@ class characterController extends Controller
 
   $response = Response::make(json_encode(['data'=>$newcharacter]), 201)->header('Location', 'http://www.dominio.local/fabricantes/'.$newcharacter->id)->header('Content-Type', 'application/json');
   return $response;
- }
- /**
- * Update the specified resource in storage.
- *
- * @param  int  $id
- * @return Response
- */
- public function update(Request $request, $id)
- {
+}
+/**
+* Update the specified resource in storage.
+*
+* @param  int  $id
+* @return Response
+*/
+public function update(Request $request, $id)
+{
   //
   // return "Se muestra Fabricante con id: $id";
   // Buscamos un fabricante por el id.
@@ -114,10 +121,10 @@ class characterController extends Controller
   $charname=$request->input('charname');
   $charbio=$request->input('charbio');
   $charbirthdate=$request->input('charbirthdate');
-  $charportrait=$request->input('charportrait');
+  $charportrait=$request->file('charportrait');
   $charstylecombat=$request->input('charstylecombat');
   $faction_id=$request->input('faction_id');
-  $charfacechar=$request->input('charfacechar');
+  $charfacechar=$request->file('charfacechar');
 
 
   // El método de la petición se sabe a través de $request->method();
@@ -219,16 +226,16 @@ class characterController extends Controller
   $characters->save();
   return response()->json(['status'=>'ok','data'=>$characters], 200);
 
- }
+}
 
- /**
- * Remove the specified resource from storage.
- *
- * @param  int  $id
- * @return Response
- */
- public function destroy($id)
- {
+/**
+* Remove the specified resource from storage.
+*
+* @param  int  $id
+* @return Response
+*/
+public function destroy($id)
+{
   // Primero eliminaremos todos los aviones de un fabricante y luego el fabricante en si mismo.
   // Comprobamos si el fabricante que nos están pasando existe o no.
   $characters=$this->character->show($id);
@@ -255,5 +262,5 @@ class characterController extends Controller
   return response()->json(['code'=>204,'message'=>'Se ha eliminado el usuario correctamente.'],204);
 
 
- }
+}
 }

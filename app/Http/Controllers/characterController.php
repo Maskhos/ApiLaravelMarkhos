@@ -52,7 +52,7 @@ public function show($character)
   // return "Se muestra Fabricante con id: $id";
   // Buscamos un fabricante por el id.
   $characters=$this->character->show($character);
-
+  
   // Si no existe ese fabricante devolvemos un error.
   if (count($characters)==0)
   {

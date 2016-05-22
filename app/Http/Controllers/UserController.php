@@ -9,6 +9,8 @@ use App\Http\Requests;
 use Response;
 
 use App\Repositories\UserRepository;
+// import the Intervention Image Manager Class
+use Intervention\Image\ImageManagerStatic as Image;
 class UserController extends Controller
 {
   protected $user;
@@ -62,6 +64,13 @@ public function show($user)
     // Se devuelve un array errors con los errores encontrados y cabecera HTTP 404.
     // En code podríamos indicar un código de error personalizado de nuestra aplicación si lo deseamos.
     return response()->json(['errors'=>array(['code'=>404,'message'=>'No se encuentra el usuario a la base de datos.'])],404);
+  }
+  for ($i=0; $i < count($users); $i++) {
+    if($users[$i]->uspicture!=null){
+      $img = Image::make($users[$i]->uspicture);
+      $users[$i]->uspicture =  base64_encode($img->encode('jpeg'));
+    }
+
   }
 
   return response()->json(['status'=>'ok','data'=>$users],200);

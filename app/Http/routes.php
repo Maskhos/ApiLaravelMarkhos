@@ -46,6 +46,7 @@ Route::patch('/character/{character}', 'characterController@update');
 //COMMENT
 //Get
 Route::get('/comment', 'commentController@index');
+Route::get('/comment/show/{comment}', 'commentController@showCommentsPost');
 Route::get('/comment/{comment}', 'commentController@show');
 //POST
 Route::post('/comment', 'commentController@store');

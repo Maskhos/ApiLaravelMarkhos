@@ -28,4 +28,8 @@ class CommentRepository
   {
       return comments::where('id', $pos)->where('comerased',false)->get();
   }
+  public function showCommentsPost($pos){
+
+    return comments::where('post_id', $pos)->where('comerased',false)->get();
+  }
 }

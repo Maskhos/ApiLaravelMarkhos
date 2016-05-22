@@ -8,6 +8,9 @@ use App\Http\Requests;
 
 
 use App\Repositories\PostRepository;
+
+// import the Intervention Image Manager Class
+use Intervention\Image\ImageManagerStatic as Image;
 // Necesitamos la clase Response para crear la respuesta especial con la cabecera de localización en el método Store()
 use Response;
 class postController extends Controller
@@ -32,6 +35,11 @@ class postController extends Controller
        // Se devuelve un array errors con los errores encontrados y cabecera HTTP 404.
        // En code podríamos indicar un código de error personalizado de nuestra aplicación si lo deseamos.
        return response()->json(['errors'=>array(['code'=>404,'message'=>'No se encuentra el usuario a la base de datos.'])],404);
+     }
+
+     for ($i=0; $i < count($posts); $i++) {
+         $img = Image::make($posts[$i]->posphoto);
+         $posts[$i]->posphoto =  base64_encode($img->encode('jpeg'));
      }
 
      return response()->json(['status'=>'ok','data'=>$posts],200);

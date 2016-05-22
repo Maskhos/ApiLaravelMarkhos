@@ -64,6 +64,28 @@ class commentController extends Controller
      'comment' => $this->comments->All() ,
     ]);*/
     }
+    public function showCommentsPost($comment)
+    {
+     //
+     // return "Se muestra Fabricante con id: $id";
+     // Buscamos un fabricante por el id.
+     $comments=$this->comment->showCommentsPost($comment);
+
+     // Si no existe ese fabricante devolvemos un error.
+     if (count($comments)==0)
+     {
+       // Se devuelve un array errors con los errores encontrados y cabecera HTTP 404.
+       // En code podríamos indicar un código de error personalizado de nuestra aplicación si lo deseamos.
+       return response()->json(['errors'=>array(['code'=>404,'message'=>'No se encuentra el usuario a la base de datos.'])],404);
+     }
+
+     return response()->json(['status'=>'ok','data'=>$comments],200);
+     // echo json_encode();
+     //var_dump($this->comments->All());
+     /*return view('comment.index', [
+     'comment' => $this->comments->All() ,
+    ]);*/
+    }
     public function store(Request $request){
      //`id``facname``facdescription``facshortdescription`
      // Primero comprobaremos si estamos recibiendo todos los campos.

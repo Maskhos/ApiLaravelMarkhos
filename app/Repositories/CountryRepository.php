@@ -11,7 +11,7 @@ class CountryRepository
 
   public function All()
   {
-      return countrys::where('couerased',false)->get();
+      return countrys::where('couerased',false)->orderBy('created_at', 'desc')->get();
   }
   public function create($request){
 

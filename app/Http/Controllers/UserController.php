@@ -35,7 +35,11 @@ class UserController extends Controller
       return response()->json(['errors'=>array(['code'=>404,'message'=>'No se encuentra el usuario a la base de datos.'])],404);
     }
     for ($i=0; $i < count($users); $i++) {
-      $users[$i]->uspicture = 'data: image/jpeg;base64,'. base64_encode($users[$i]->uspicture);
+      if($users[$i]->uspicture!=null){
+        $img = Image::make($users[$i]->uspicture);
+        $users[$i]->uspicture =  base64_encode($img->encode('jpeg'));
+      }
+
     }
     return response()->json(['status'=>'ok','data'=>$users],200);
     // echo json_encode();
@@ -82,6 +86,7 @@ public function show($user)
 }
 
 public function login(Request $request){
+
   if (!$request->input('email') || !$request->input('password'))
   {
     // Se devuelve un array errors con los errores encontrados y cabecera HTTP 422 Unprocessable Entity – [Entidad improcesable] Utilizada para errores de validación.
@@ -94,12 +99,17 @@ public function login(Request $request){
   $users=$this->user->retrieveByCredentials($request->all());
 
   // Si no existe ese fabricante devolvemos un error.
-  if (count($users)==0)
+  if ($users == null)
   {
     // Se devuelve un array errors con los errores encontrados y cabecera HTTP 404.
     // En code podríamos indicar un código de error personalizado de nuestra aplicación si lo deseamos.
     return response()->json(['errors'=>array(['code'=>404,'message'=>'No se encuentra el usuario a la base de datos.'])],404);
   }
+  if($users->uspicture!=null){
+    $img = Image::make($users->uspicture);
+    $users->uspicture =  base64_encode($img->encode('jpeg'));
+  }
+
 
   return response()->json(['status'=>'ok','data'=>$users],200);
 
@@ -204,7 +214,7 @@ public function bytoken($id,$token){
 * @param  int  $id
 * @return Response
 */
-public function update(Request $request, $id)
+public function update(Request $request, $id, $type)
 {
   //
   // return "Se muestra Fabricante con id: $id";
@@ -216,7 +226,11 @@ public function update(Request $request, $id)
   }
   // Listado de campos recibidos teóricamente.
   //email, redes sociales , contrasenya
-  $uspicture=$request->file('uspicture');
+
+
+
+  $uspicture= $request->file('uspicture');
+  $usname = $request->input("usname");
   $usbirthDate=$request->input('usbirthdate');
   $country_id=$request->input('country_id');
   $ustumblr=$request->input('ustumblr');
@@ -225,10 +239,9 @@ public function update(Request $request, $id)
   $usfacebook=$request->input('usfacebook');
   $email = $request->input('email');
   $usintagram = $request->input('usinstagram');
-  $password = $request->input('password');
   // El método de la petición se sabe a través de $request->method();
   /*	Modelo		Longitud		Capacidad		Velocidad		Alcance */
-  if ($request->method() === 'PATCH')
+  if ($type === 'PATCH')
   {
     // Creamos una bandera para controlar si se ha modificado algún dato en el método PATCH.
     $bandera = false;
@@ -236,10 +249,15 @@ public function update(Request $request, $id)
     // Actualización parcial de campos.
     if ($uspicture)
     {
-      $users->uspicture = $uspicture;
+      $users->uspicture = Image::make($uspicture)->encode('png');
       $bandera=true;
     }
 
+    if ($usname)
+    {
+      $users->usname = $usname;
+      $bandera=true;
+    }
     if ($usbirthDate)
     {
       $users->usbirthDate = $usbirthDate;
@@ -288,15 +306,11 @@ public function update(Request $request, $id)
       $users->usintagram = $usintagram;
       $bandera=true;
     }
-    if ($password)
-    {
-      $users->password = $password;
-      $bandera=true;
-    }
     if ($bandera)
     {
       // Almacenamos en la base de datos el registro.
       $users->save();
+      $users->uspicture= base64_encode($users->uspicture);
       return response()->json(['status'=>'ok','data'=>$users], 200);
     }
     else
@@ -319,7 +333,7 @@ public function update(Request $request, $id)
   $password = $request->input('password');
   */
   // Si el método no es PATCH entonces es PUT y tendremos que actualizar todos los datos.
-  if (!$uspicture || !$usbirthDate || !$country_id || !$ustumblr || !$ustwitter || !$usdesc || !$usfacebook || !$email  || !$usinstagram || !$password)
+  if (!$uspicture || !$usbirthDate || !$country_id || !$ustumblr || !$ustwitter || !$usdesc || !$usfacebook || !$email  || !$usinstagram )
   {
     // Se devuelve un array errors con los errores encontrados y cabecera HTTP 422 Unprocessable Entity – [Entidad improcesable] Utilizada para errores de validación.
     return response()->json(['errors'=>array(['code'=>422,'message'=>'Faltan valores para completar el procesamiento.'])],422);
@@ -333,10 +347,10 @@ public function update(Request $request, $id)
   $users->usfacebook = $usfacebook;
   $users->email = $email;
   $users->usinstagram = $usinstagram;
-  $users->$password = $password;
 
   // Almacenamos en la base de datos el registro.
   $users->save();
+  $users->uspicture = base64_encode($uspicture);
 
   return response()->json(['status'=>'ok','data'=>$users], 200);
 

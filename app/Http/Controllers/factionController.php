@@ -8,6 +8,8 @@ use App\Http\Requests;
 use App\Repositories\FactionRepository;
 // Necesitamos la clase Response para crear la respuesta especial con la cabecera de localización en el método Store()
 use Response;
+// import the Intervention Image Manager Class
+use Intervention\Image\ImageManagerStatic as Image;
 class factionController extends Controller
 {
   protected $faction;
@@ -30,6 +32,12 @@ class factionController extends Controller
       // Se devuelve un array errors con los errores encontrados y cabecera HTTP 404.
       // En code podríamos indicar un código de error personalizado de nuestra aplicación si lo deseamos.
       return response()->json(['errors'=>array(['code'=>404,'message'=>'No se encuentra el usuario a la base de datos.'])],404);
+    }
+    for ($i=0; $i < count($factions); $i++) {
+      if($factions[$i]->facphoto!=null){
+        $img = Image::make($factions[$i]->facphoto);
+        $factions[$i]->facphoto =  base64_encode($img->encode('png'));
+      }
     }
 
     return response()->json(['status'=>'ok','data'=>$factions],200);
@@ -59,6 +67,12 @@ public function show($faction)
     // Se devuelve un array errors con los errores encontrados y cabecera HTTP 404.
     // En code podríamos indicar un código de error personalizado de nuestra aplicación si lo deseamos.
     return response()->json(['errors'=>array(['code'=>404,'message'=>'No se encuentra el usuario a la base de datos.'])],404);
+  }
+  for ($i=0; $i < count($factions); $i++) {
+    if($factions[$i]->facphoto!=null){
+      $img = Image::make($factions[$i]->facphoto);
+      $factions[$i]->facphoto =  base64_encode($img->encode('png'));
+    }
   }
 
   return response()->json(['status'=>'ok','data'=>$factions],200);

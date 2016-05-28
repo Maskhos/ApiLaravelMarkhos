@@ -107,14 +107,14 @@ Route::patch('/mechanic/{mechanic}', 'MechanicController@update');
 //POSTS WEB
 //GET
 Route::get('/post', 'postController@index');
+Route::get('/post/last/{limit}', 'postController@lastspost');
 Route::get('/post/{post}', 'postController@show');
 //POST
 Route::post('/post', 'postController@store');
 //DELETE
-Route::delete('/post/{post}', 'postController@delete');
+Route::delete('/post/{post}', 'postController@destroy');
 //PUT
-Route::put('/post/{post}', 'postController@update');
-Route::patch('/post/{post}', 'postController@update');
+Route::post('/post/{post}/{type}', 'postController@update');
 //USER
 //GET
 Route::get('/user', 'UserController@index');
@@ -124,8 +124,7 @@ Route::post('/user', 'UserController@store');
 //DELETE
 Route::delete('/user/{user}', 'UserController@delete');
 //PUT
-Route::put('/user/{user}', 'UserController@update');
-Route::patch('/user/{user}', 'UserController@update');
+Route::post('/user/{user}/{type}', 'UserController@update');
 //LOGINTOWEB
 
 Route::get('/user/{id}/{token}', 'UserController@bytoken');

@@ -11,11 +11,16 @@ class CommentRepository
 
   public function All()
   {
-      return comments::where('comerased',false)->get();
+      return comments::where('comerased',false)->orderBy('created_at', 'desc')->get();
   }
   public function create($request){
 
-    return comments::create($request->all());
+    return comments::create([
+        'comcontent' =>  $request->comcontent,
+        'user_id' => $request->user_id,
+        'post_id' => $request->post_id,
+
+      ]);
   }
   /**
    * Get all of the tasks for a given user.
@@ -30,6 +35,6 @@ class CommentRepository
   }
   public function showCommentsPost($pos){
 
-    return comments::where('post_id', $pos)->where('comerased',false)->get();
+    return comments::where('post_id', $pos)->orderBy('created_at', 'desc')->where('comerased',false)->get();
   }
 }

@@ -9,6 +9,8 @@ use App\Http\Requests;
 use App\Repositories\CharacterRepository;
 // Necesitamos la clase Response para crear la respuesta especial con la cabecera de localización en el método Store()
 use Response;
+// import the Intervention Image Manager Class
+use Intervention\Image\ImageManagerStatic as Image;
 class characterController extends Controller
 {
   protected $character;
@@ -29,8 +31,17 @@ class characterController extends Controller
       return response()->json(['errors'=>array(['code'=>404,'message'=>'No se encuentra el usuario a la base de datos.'])],404);
     }
     for ($i=0; $i < count($characters); $i++) {
-      $characters[$i]->charportrait = 'data: image/jpeg;base64,'. base64_encode($characters[$i]->charportrait);
-      $characters[$i]->charfacechar = 'data: image/jpeg;base64,'. base64_encode($characters[$i]->charfacechar);
+
+      $img = Image::make($characters[$i]->charportrait);
+      //  $characters[$i]->charportrait =  base64_encode($img->encode('jpeg'));
+
+      $characters[$i]->charportrait =  base64_encode($img->encode('png'));
+      if($characters[$i]->charfacechar !=null){
+        $img = Image::make($characters[$i]->charfacechar);
+
+        $characters[$i]->charfacechar = base64_encode($img->encode('png'));
+      }
+
     }
     return response()->json(['status'=>'ok','data'=>$characters],200);
     // echo json_encode();
@@ -52,7 +63,7 @@ public function show($character)
   // return "Se muestra Fabricante con id: $id";
   // Buscamos un fabricante por el id.
   $characters=$this->character->show($character);
-  
+
   // Si no existe ese fabricante devolvemos un error.
   if (count($characters)==0)
   {
@@ -61,15 +72,23 @@ public function show($character)
     return response()->json(['errors'=>array(['code'=>404,'message'=>'No se encuentra el usuario a la base de datos.'])],404);
   }
   for ($i=0; $i < count($characters); $i++) {
-    $characters[$i]->charportrait = 'data: image/jpeg;base64,'. base64_encode($characters[$i]->charportrait);
-    $characters[$i]->charfacechar = 'data: image/jpeg;base64,'. base64_encode($characters[$i]->charfacechar);
+
+    $img = Image::make($characters[$i]->charportrait);
+    //  $characters[$i]->charportrait =  base64_encode($img->encode('jpeg'));
+
+    $characters[$i]->charportrait =  base64_encode($img->encode('png'));
+    if($characters[$i]->charfacechar !=null){
+      $img = Image::make($characters[$i]->charfacechar);
+
+      $characters[$i]->charfacechar = base64_encode($img->encode('png'));
+    }
   }
-  return response()->json(['status'=>'ok','data'=>$characters],200);
-  // echo json_encode();
-  //var_dump($this->characters->All());
-  /*return view('character.index', [
-  'character' => $this->characters->All() ,
-]);*/
+    return response()->json(['status'=>'ok','data'=>$characters],200);
+    // echo json_encode();
+    //var_dump($this->characters->All());
+    /*return view('character.index', [
+    'character' => $this->characters->All() ,
+  ]);*/
 }
 public function store(Request $request){
   //`id``facname``facdescription``facshortdescription`

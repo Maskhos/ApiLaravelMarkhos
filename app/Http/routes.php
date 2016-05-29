@@ -11,9 +11,9 @@
 |
 */
 //
- Route::get('/', function () {
-     return "(/resource) para encontrar lo que andas buscando";
- });
+Route::get('/', function () {
+  return "(/resource) para encontrar lo que andas buscando";
+});
 //PRUEBA
 //GET
 Route::get('/prueba', 'pruebaController@index');
@@ -45,11 +45,15 @@ Route::patch('/character/{character}', 'characterController@update');
 
 //COMMENT
 //Get
+
+Route::get('/auth',  ['uses' => 'commentController@index','middleware'=>'simpleauth']);
 Route::get('/comment', 'commentController@index');
 Route::get('/comment/show/{comment}', 'commentController@showCommentsPost');
 Route::get('/comment/{comment}', 'commentController@show');
 //POST
 Route::post('/comment', 'commentController@store');
+
+//Route::post('/comment', ['uses' => 'commentController@store','middleware'=>'simpleauth']);
 //DELETE
 Route::delete('/comment/{comment}', 'commentController@destroy');
 //PUT
@@ -107,12 +111,12 @@ Route::patch('/mechanic/{mechanic}', 'MechanicController@update');
 //POSTS WEB
 //GET
 Route::get('/post', 'postController@index');
-Route::get('/post/last/{limit}', 'postController@lastspost');
+Route::get('/post/lastspost/{limit}', 'postController@lastspost');
 Route::get('/post/{post}', 'postController@show');
 //POST
 Route::post('/post', 'postController@store');
 //DELETE
-Route::delete('/post/{post}', 'postController@destroy');
+Route::delete('/post/{post}', 'postController@delete');
 //PUT
 Route::post('/post/{post}/{type}', 'postController@update');
 //USER

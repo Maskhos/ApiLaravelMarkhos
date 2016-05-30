@@ -32,6 +32,6 @@ class CharacterRepository
 
      public function show($pos)
      {
-         return characters::where('id', $pos)->where('charerased',false)->get();
+         return characters::where('id', $pos)->with("factions")->where('charerased',false)->get();
      }
 }

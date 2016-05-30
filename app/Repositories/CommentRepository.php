@@ -11,7 +11,7 @@ class CommentRepository
 
   public function All()
   {
-      return comments::where('comerased',false)->orderBy('created_at', 'desc')->get();
+      return comments::where('comerased',false)->orderBy('created_at', 'desc')->with("users")->get();
   }
   public function create($request){
 
@@ -31,10 +31,10 @@ class CommentRepository
 
   public function show($pos)
   {
-      return comments::where('id', $pos)->where('comerased',false)->get();
+      return comments::where('id', $pos)->where('comerased',false)->with("users")->get();
   }
   public function showCommentsPost($pos){
 
-    return comments::where('post_id', $pos)->orderBy('created_at', 'desc')->where('comerased',false)->get();
+    return comments::where('post_id', $pos)->where('comerased',false)->orderBy('created_at', 'desc')->with("users")->get();
   }
 }

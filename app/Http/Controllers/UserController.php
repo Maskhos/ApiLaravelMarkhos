@@ -37,9 +37,12 @@ class UserController extends Controller
     for ($i=0; $i < count($users); $i++) {
       if($users[$i]->uspicture!=null){
         $img = Image::make($users[$i]->uspicture);
-        $users[$i]->uspicture =  base64_encode($img->encode('jpeg'));
-      }
+        $users[$i]->uspicture =  base64_encode($img->encode('png'));
 
+        //  }
+      }
+      $img2 = Image::make($users[$i]["factions"]->facphoto);
+      $users[$i]["factions"]->facphoto =  base64_encode($img2->encode('png'));
     }
     return response()->json(['status'=>'ok','data'=>$users],200);
     // echo json_encode();
@@ -72,9 +75,12 @@ public function show($user)
   for ($i=0; $i < count($users); $i++) {
     if($users[$i]->uspicture!=null){
       $img = Image::make($users[$i]->uspicture);
-      $users[$i]->uspicture =  base64_encode($img->encode('jpeg'));
-    }
+      $users[$i]->uspicture =  base64_encode($img->encode('png'));
 
+      //  }
+    }
+    $img2 = Image::make($users[$i]["factions"]->facphoto);
+    $users[$i]["factions"]->facphoto =  base64_encode($img2->encode('png'));
   }
 
   return response()->json(['status'=>'ok','data'=>$users],200);
@@ -108,6 +114,7 @@ public function login(Request $request){
   if($users->uspicture!=null){
     $img = Image::make($users->uspicture);
     $users->uspicture =  base64_encode($img->encode('jpeg'));
+
   }
 
 
@@ -129,6 +136,7 @@ public function store(Request $request){
   // Insertamos una fila en Fabricante con create pasándole todos los datos recibidos.
   // En $request->all() tendremos todos los campos del formulario recibidos.
   $newUser=$this->user->create($request);
+
 
   // Más información sobre respuestas en http://jsonapi.org/format/
   // Devolvemos el código HTTP 201 Created – [Creada] Respuesta a un POST que resulta en una creación. Debería ser combinado con un encabezado Location, apuntando a la ubicación del nuevo recurso.
@@ -310,7 +318,12 @@ public function update(Request $request, $id, $type)
     {
       // Almacenamos en la base de datos el registro.
       $users->save();
-      $users->uspicture= base64_encode($users->uspicture);
+      if($users->uspicture!=null){
+        $img1 = Image::make($users->uspicture);
+        $users->uspicture =  base64_encode($img1->encode('png'));
+      }
+      $img2 = Image::make($users["factions"]->facphoto);
+      $users["factions"]->facphoto =base64_encode($img2->encode('png'));
       return response()->json(['status'=>'ok','data'=>$users], 200);
     }
     else
@@ -350,8 +363,12 @@ public function update(Request $request, $id, $type)
 
   // Almacenamos en la base de datos el registro.
   $users->save();
-  $users->uspicture = base64_encode($uspicture);
-
+  if($users->uspicture!=null){
+    $img1 = Image::make($users->uspicture);
+    $users->uspicture =  base64_encode($img1->encode('png'));
+  }
+  $img2 = Image::make($users["factions"]->facphoto);
+  $users["factions"]->facphoto =base64_encode($img2->encode('png'));
   return response()->json(['status'=>'ok','data'=>$users], 200);
 
 }

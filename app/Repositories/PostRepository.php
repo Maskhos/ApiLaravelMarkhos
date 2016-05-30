@@ -9,9 +9,11 @@ use App\posts;
 use Intervention\Image\ImageManagerStatic as Image;
 class PostRepository
 {
+  public function bycategory($id){
+    return posts::where('poserased',false)->where("category_id",$id)->with('users')->with('categorys')->get(); // Now list that one column;
+  }
   public function limitBy($limit){
-    return posts::where('poserased',false)->orderBy('created_at', 'desc')
-    ->take($limit)->get();
+    return posts::where('poserased',false)->orderBy('posdate', 'desc')->with('users')->with('categorys')->take($limit)->get();
 
   }
   /**
@@ -22,8 +24,8 @@ class PostRepository
   */
   public function All()
   {
-
-    return posts::where('poserased',false)->orderBy('created_at', 'desc')->get();
+    return posts::where('poserased',false)->with('users')->with('categorys')->get();
+    //return posts::where('poserased',false)->orderBy('posdate`', 'desc')->join('categorys as category', 'categorys.id', '=', 'category_id')->join('users', 'users.id', '=', 'user_id')->get(); // Now list that one column;
   }
   public function create($request){
     $img = Image::make($request->file('posphoto'));
@@ -45,6 +47,6 @@ class PostRepository
 
   public function show($pos)
   {
-    return posts::where('id', $pos)->where('poserased',false)->get();
+    return posts::where('posts.id', $pos)->where('poserased',false)->with('users')->with('categorys')->with("comments")->get();
   }
 }

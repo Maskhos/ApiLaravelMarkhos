@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class posts extends Model
 {
   protected $fillable = [
-      'user_id','postitle','posdescription','poscontent','posphoto','posdate','shortdesc','poserased','category_id'
+    'id','user_id','postitle','posdescription','poscontent','posphoto','posdate','posshortdesc','poserased','category_id','created_at'
   ];
 
   /**
@@ -16,12 +16,24 @@ class posts extends Model
    * @var array
    */
   protected $hidden = [
-      'posid','created_at','updated_at'
+      'posid','updated_at'
   ];
-  public function user()
+  public function users()
   {
     // 1 avión pertenece a un Fabricante.
     // $this hace referencia al objeto que tengamos en ese momento de Avión.
-    return $this->belongsTo('App\User');
+    return $this->belongsTo('App\User','user_id','id');
+  }
+  public function categorys()
+  {
+    // 1 avión pertenece a un Fabricante.
+    // $this hace referencia al objeto que tengamos en ese momento de Avión.
+    return $this->belongsTo('App\categorys','category_id','id');
+  }
+  public function comments()
+  {
+    // 1 avión pertenece a un Fabricante.
+    // $this hace referencia al objeto que tengamos en ese momento de Avión.
+    return $this->hasMany('App\comments','post_id');
   }
 }

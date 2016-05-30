@@ -79,9 +79,11 @@ public function show($character)
     $characters[$i]->charportrait =  base64_encode($img->encode('png'));
     if($characters[$i]->charfacechar !=null){
       $img = Image::make($characters[$i]->charfacechar);
-
       $characters[$i]->charfacechar = base64_encode($img->encode('png'));
     }
+    $img2 = Image::make($characters[$i]["factions"]->facphoto);
+    $characters[$i]["factions"]->facphoto =base64_encode($img2->encode('png'));
+  
   }
     return response()->json(['status'=>'ok','data'=>$characters],200);
     // echo json_encode();

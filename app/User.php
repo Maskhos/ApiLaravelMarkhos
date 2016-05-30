@@ -23,10 +23,10 @@ class User extends Authenticatable
     protected $hidden = [
      'created_at','updated_at'
     ];
-    public function faction()
+    public function factions()
     {
       // 1 usuari te una facio.
       // $this hace referencia al objeto que tengamos en ese momento de Avión.
-      return $this->belongsTo('App\faction');
+      return $this->belongsTo('App\factions',"faction_id","id");
     }
 }

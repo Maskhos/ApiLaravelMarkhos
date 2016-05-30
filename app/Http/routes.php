@@ -111,12 +111,13 @@ Route::patch('/mechanic/{mechanic}', 'MechanicController@update');
 //POSTS WEB
 //GET
 Route::get('/post', 'postController@index');
-Route::get('/post/lastspost/{limit}', 'postController@lastspost');
+Route::get('/post/last/{limit}', 'postController@lastspost');
 Route::get('/post/{post}', 'postController@show');
+Route::get('/post/category/{id}', 'postController@bycategory');
 //POST
 Route::post('/post', 'postController@store');
 //DELETE
-Route::delete('/post/{post}', 'postController@delete');
+Route::delete('/post/{post}', 'postController@destroy');
 //PUT
 Route::post('/post/{post}/{type}', 'postController@update');
 //USER

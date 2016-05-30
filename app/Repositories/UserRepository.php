@@ -23,7 +23,7 @@ class UserRepository
   */
   public function All()
   {
-    return User::where('userased',false)->get();
+    return User::where('userased',false)->with("factions")->get();
   }
     public function create($request){
 
@@ -38,7 +38,7 @@ class UserRepository
 
     public function show($user)
     {
-      return User::where('id', $user)->where('userased',false)->get();
+      return User::where('id', $user)->with("factions")->where('userased',false)->get();
     }
     public function retrieveByToken($identifier, $token)
     {

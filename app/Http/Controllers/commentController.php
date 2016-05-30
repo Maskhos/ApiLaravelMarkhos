@@ -9,6 +9,8 @@ use App\Http\Requests;
 use App\Repositories\CommentRepository;
 // Necesitamos la clase Response para crear la respuesta especial con la cabecera de localización en el método Store()
 use Response;
+// import the Intervention Image Manager Class
+use Intervention\Image\ImageManagerStatic as Image;
 class commentController extends Controller
 {
   protected $comment;
@@ -28,7 +30,16 @@ class commentController extends Controller
       // En code podríamos indicar un código de error personalizado de nuestra aplicación si lo deseamos.
       return response()->json(['errors'=>array(['code'=>404,'message'=>'No se encuentra el usuario a la base de datos.'])],404);
     }
+    for ($i=0; $i < count($comments); $i++) {
 
+
+
+      if($comments[$i]["users"]->uspicture !=null){
+        $img2 = Image::make($comments[$i]["users"]->uspicture);
+
+        $comments[$i]["users"]->uspicture = base64_encode($img2->encode('png'));
+      }
+    }
     return response()->json(['status'=>'ok','data'=>$comments],200);
     // echo json_encode();
     //var_dump($this->comments->All());
@@ -57,7 +68,12 @@ public function show($comment)
     // En code podríamos indicar un código de error personalizado de nuestra aplicación si lo deseamos.
     return response()->json(['errors'=>array(['code'=>404,'message'=>'No se encuentra el usuario a la base de datos.'])],404);
   }
-
+  for ($i=0; $i < count($comments); $i++) {
+    if($comments[$i]["users"]->uspicture !=null){
+      $img2 = Image::make($comments[$i]["users"]->uspicture);
+      $comments[$i]["users"]->uspicture = base64_encode($img2->encode('png'));
+    }
+  }
   return response()->json(['status'=>'ok','data'=>$comments],200);
   // echo json_encode();
   //var_dump($this->comments->All());
@@ -79,7 +95,16 @@ public function showCommentsPost($comment)
     // En code podríamos indicar un código de error personalizado de nuestra aplicación si lo deseamos.
     return response()->json(['errors'=>array(['code'=>404,'message'=>'No se encuentra el usuario a la base de datos.'])],404);
   }
+  for ($i=0; $i < count($comments); $i++) {
 
+
+
+    if($comments[$i]["users"]->uspicture !=null){
+      $img2 = Image::make($comments[$i]["users"]->uspicture);
+
+      $comments[$i]["users"]->uspicture = base64_encode($img2->encode('png'));
+    }
+  }
   return response()->json(['status'=>'ok','data'=>$comments],200);
   // echo json_encode();
   //var_dump($this->comments->All());
@@ -103,6 +128,11 @@ public function store(Request $request){
   // En $request->all() tendremos todos los campos del formulario recibidos.
   $newcomment=$this->comment->create($request);
 
+  if($newcomment["users"]->uspicture !=null){
+    $img2 = Image::make( $newcomment->uspicture);
+
+    $newcomment->uspicture = base64_encode($img2->encode('png'));
+  }
   // Más información sobre respuestas en http://jsonapi.org/format/
   // Devolvemos el código HTTP 201 Created – [Creada] Respuesta a un comment que resulta en una creación. Debería ser combinado con un encabezado Location, apuntando a la ubicación del nuevo recurso.
 
@@ -168,6 +198,13 @@ public function update(Request $request, $id)
     {
       // Almacenamos en la base de datos el registro.
       $comments->save();
+      //for ($i=0; $i < count($comments); $i++) {
+      if($comments["users"]->uspicture !=null){
+        $img2 = Image::make($comments["users"]->uspicture);
+
+        $comments["users"]->uspicture = base64_encode($img2->encode('png'));
+      }
+      //}
       return response()->json(['status'=>'ok','data'=>$comments], 200);
     }
     else

@@ -35,13 +35,40 @@ class postController extends Controller
     }
 
     for ($i=0; $i < count($posts); $i++) {
-      $img = Image::make($posts[$i]->posphoto);
-      $posts[$i]->posphoto =  base64_encode($img->encode(''));
+
+      $img1 = Image::make($posts[$i]->posphoto);
+      $posts[$i]->posphoto =  base64_encode($img1->encode('png'));
+      if($posts[$i]["users"]->uspicture !=null){
+        $img2 = Image::make($posts[$i]["users"]->uspicture);
+
+        $posts[$i]["users"]->uspicture = base64_encode($img2->encode('png'));
+      }
     }
+
 
     return response()->json(['status'=>'ok','data'=>$posts],200);
   }
+  public function bycategory($id){
+    $posts = $this->post->bycategory($id);
+    // Si no existe ese fabricante devolvemos un error.
+    if (count($posts)==0)
+    {
+      // Se devuelve un array errors con los errores encontrados y cabecera HTTP 404.
+      // En code podríamos indicar un código de error personalizado de nuestra aplicación si lo deseamos.
+      return response()->json(['errors'=>array(['code'=>404,'message'=>'No se encuentra el usuario a la base de datos.'])],404);
+    }
 
+    for ($i=0; $i < count($posts); $i++) {
+      $img1 = Image::make($posts[$i]->posphoto);
+      $img2 = Image::make($posts[$i]["users"]->uspicture);
+
+      $posts[$i]->posphoto =  base64_encode($img1->encode('png'));
+      $posts[$i]["users"]->uspicture = base64_encode($img2->encode('png'));
+    }
+
+    return response()->json(['status'=>'ok','data'=>$posts],200);
+
+  }
   public function lastspost($limit){
     $posts = $this->post->limitBy($limit);
     // Si no existe ese fabricante devolvemos un error.
@@ -52,9 +79,13 @@ class postController extends Controller
       return response()->json(['errors'=>array(['code'=>404,'message'=>'No se encuentra el usuario a la base de datos.'])],404);
     }
 
+
     for ($i=0; $i < count($posts); $i++) {
-      $img = Image::make($posts[$i]->posphoto);
-      $posts[$i]->posphoto =  base64_encode($img->encode(''));
+      $img1 = Image::make($posts[$i]->posphoto);
+      $img2 = Image::make($posts[$i]["users"]->uspicture);
+
+      $posts[$i]->posphoto =  base64_encode($img1->encode('png'));
+      $posts[$i]["users"]->uspicture = base64_encode($img2->encode('png'));
     }
 
     return response()->json(['status'=>'ok','data'=>$posts],200);
@@ -101,7 +132,7 @@ public function show($post)
   // return "Se muestra Fabricante con id: $id";
   // Buscamos un fabricante por el id.
   $posts=$this->post->show($post);
-
+  //var_dump($posts);
   // Si no existe ese fabricante devolvemos un error.
   if (count($posts)==0)
   {
@@ -110,9 +141,13 @@ public function show($post)
     return response()->json(['errors'=>array(['code'=>404,'message'=>'No se encuentra el usuario a la base de datos.'])],404);
   }
   for ($i=0; $i < count($posts); $i++) {
-    $img = Image::make($posts[$i]->posphoto);
-    $posts[$i]->posphoto =  base64_encode($img->encode(''));
+    $img1 = Image::make($posts[$i]->posphoto);
+    $img2 = Image::make($posts[$i]["users"]->uspicture);
+
+    $posts[$i]->posphoto =  base64_encode($img1->encode('png'));
+    $posts[$i]["users"]->uspicture = base64_encode($img2->encode('png'));
   }
+
   return response()->json(['status'=>'ok','data'=>$posts],200);
   // echo json_encode();
   //var_dump($this->factions->All());
@@ -121,6 +156,7 @@ public function show($post)
 ]);*/
 }
 public function store(Request $request){
+
   // Primero comprobaremos si estamos recibiendo todos los campos.
   //user,texto ,titulo , contenido del post ,  descripcion , photo  breve, categoria
   if (!$request->input('user_id') || !$request->input('postitle') || !$request->input('poscontent')  || !$request->file('posphoto') || !$request->input('category_id') || !$request->input('posshortdesc'))
@@ -225,9 +261,15 @@ public function update(Request $request, $posid,$type)
     {
       // Almacenamos en la base de datos el registro.
       $posts->save();
+
       if($posts->posphoto !=null){
         $img = Image::make($posts->posphoto);
-        $posts->posphoto =  base64_encode($img->encode('jpeg'));
+        $posts->posphoto =  base64_encode($img->encode('png'));
+      }
+      if($posts["users"]->uspicture !=null){
+        $img2 = Image::make($posts["users"]->uspicture);
+
+        $posts["users"]->uspicture = base64_encode($img2->encode('png'));
       }
       return response()->json(['status'=>'ok','data'=>$posts], 200);
     }
@@ -263,9 +305,13 @@ public function update(Request $request, $posid,$type)
 
   // Almacenamos en la base de datos el registro.
   $posts->save();
-  if($posts !=null){
+  if($posts->posphoto !=null){
     $img = Image::make($posts->posphoto);
     $posts->posphoto =  base64_encode($img->encode('jpeg'));
+  }
+  if($posts["users"]->uspicture !=null){
+    $img = Image::make($posts["users"]->uspicture);
+    $posts["users"]->uspicture =  base64_encode($img->encode('png'));
   }
   return response()->json(['status'=>'ok','data'=>$posts], 200);
 

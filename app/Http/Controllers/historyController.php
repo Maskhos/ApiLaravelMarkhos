@@ -3,12 +3,14 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-
+use Config;
 use App\Http\Requests;
 
 use App\Repositories\HistoryRepository;
 // Necesitamos la clase Response para crear la respuesta especial con la cabecera de localización en el método Store()
 use Response;
+use Cache;
+
 class historyController extends Controller
 {
   protected $history;
@@ -18,12 +20,26 @@ class historyController extends Controller
     //$this->middleware('auth');
     //var_dump($factions);
     $this->history = $history;
+    $this->middleware('tokenauth',['only'=>['store','update','destroy']]);
+    $this->middleware('locale');
   }
-
+/**
+ *  mostrar todos los datos de la base
+ * @param  Request $request contenido que nos pasa el cliente
+ * @return json           todos los contenidos de la bd en formato json
+ */
   public function index(Request $request)
   {
 
-    $historys = $this->history->All();
+    $historys = null;
+    if (Config::get('app.locale') == 'es')
+    {
+      $historys =Cache::remember('historys',20/60, function(){
+        return $this->history->All();
+      });
+    }else{
+      $historys = $this->history->AllLAN(Config::get('app.locale'));
+    }
     // Si no existe ese fabricante devolvemos un error.
     if (count($historys)==0)
     {
@@ -46,15 +62,21 @@ class historyController extends Controller
     'faction' => $this->factions->All() ,
   ]);*/
 }
+/**
+ * Motrar el contenido de la base de datos segun el contenido
+ * @param  int $history  identificador a buscar
+ * @return json          devolver el objeto actual a json
+ */
 public function show($history)
 {
   //
   // return "Se muestra Fabricante con id: $id";
   // Buscamos un fabricante por el id.
-  $historys=$this->history->show($history);
+  $historys=null;
+  $historys = $this->history->show($history);
 
   // Si no existe ese fabricante devolvemos un error.
-  if (count($historys)==0)
+  if ($historys==null)
   {
     // Se devuelve un array errors con los errores encontrados y cabecera HTTP 404.
     // En code podríamos indicar un código de error personalizado de nuestra aplicación si lo deseamos.

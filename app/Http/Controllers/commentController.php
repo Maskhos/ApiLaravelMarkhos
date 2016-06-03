@@ -10,19 +10,34 @@ use App\Repositories\CommentRepository;
 // Necesitamos la clase Response para crear la respuesta especial con la cabecera de localización en el método Store()
 use Response;
 // import the Intervention Image Manager Class
+use Cache;
+// import the Intervention Image Manager Class
 use Intervention\Image\ImageManagerStatic as Image;
 class commentController extends Controller
 {
   protected $comment;
 
+  /**
+  * Metodo para recoger la clase repository y pereparar el middleware
+  * @param CommentRepository $comments Repository de commentsario
+  */
   function __construct(CommentRepository $comments){
     $this->comment = $comments;
+    $this->middleware('tokenauth',['only'=>['store','update','destroy']]);
   }
-
+  /**
+  * Devuelve todo el contenido de la base de commentario transformado en json
+  * @param  Request $request Contenido que nos pasa el usuario
+  * @return json devuelve un json para pasarselo al cliente
+  */
   public function index(Request $request)
   {
 
-    $comments = $this->comment->All();
+    $comments = null;
+    $comments =  Cache::remember('comments',20/60, function()
+    {
+      return    $this->comment->All();
+    });
     // Si no existe ese fabricante devolvemos un error.
     if (count($comments)==0)
     {
@@ -30,16 +45,7 @@ class commentController extends Controller
       // En code podríamos indicar un código de error personalizado de nuestra aplicación si lo deseamos.
       return response()->json(['errors'=>array(['code'=>404,'message'=>'No se encuentra el usuario a la base de datos.'])],404);
     }
-    for ($i=0; $i < count($comments); $i++) {
 
-
-
-      if($comments[$i]["users"]->uspicture !=null){
-        $img2 = Image::make($comments[$i]["users"]->uspicture);
-
-        $comments[$i]["users"]->uspicture = base64_encode($img2->encode('png'));
-      }
-    }
     return response()->json(['status'=>'ok','data'=>$comments],200);
     // echo json_encode();
     //var_dump($this->comments->All());
@@ -54,26 +60,26 @@ class commentController extends Controller
     'comment' => $this->comments->All() ,
   ]);*/
 }
+/**
+* Devuelve el contenido  de la base de commentarios segun el identificador,  transformado en json
+* @param  Request $request Contenido que nos pasa el usuario
+* @return json devuelve un json para pasarselo al cliente
+*/
 public function show($comment)
 {
   //
   // return "Se muestra Fabricante con id: $id";
   // Buscamos un fabricante por el id.
-  $comments=$this->comment->show($comment);
-
+  $comments=null;
+  $comments =  $this->comment->show($comment);
   // Si no existe ese fabricante devolvemos un error.
-  if (count($comments)==0)
+  if ($comments ==null)
   {
     // Se devuelve un array errors con los errores encontrados y cabecera HTTP 404.
     // En code podríamos indicar un código de error personalizado de nuestra aplicación si lo deseamos.
     return response()->json(['errors'=>array(['code'=>404,'message'=>'No se encuentra el usuario a la base de datos.'])],404);
   }
-  for ($i=0; $i < count($comments); $i++) {
-    if($comments[$i]["users"]->uspicture !=null){
-      $img2 = Image::make($comments[$i]["users"]->uspicture);
-      $comments[$i]["users"]->uspicture = base64_encode($img2->encode('png'));
-    }
-  }
+
   return response()->json(['status'=>'ok','data'=>$comments],200);
   // echo json_encode();
   //var_dump($this->comments->All());
@@ -81,13 +87,19 @@ public function show($comment)
   'comment' => $this->comments->All() ,
 ]);*/
 }
+/**
+*
+* Devuelve todo el contenido de la base de comments transformado en json
+* @param  Request $request Contenido que nos pasa el usuario
+* @return json devuelve un json para pasarselo al cliente
+*/
 public function showCommentsPost($comment)
 {
   //
   // return "Se muestra Fabricante con id: $id";
   // Buscamos un fabricante por el id.
-  $comments=$this->comment->showCommentsPost($comment);
-
+  $comments=null;
+  $comments =$this->comment->showCommentsPost($comment);
   // Si no existe ese fabricante devolvemos un error.
   if ($comments==null)
   {
@@ -95,16 +107,7 @@ public function showCommentsPost($comment)
     // En code podríamos indicar un código de error personalizado de nuestra aplicación si lo deseamos.
     return response()->json(['errors'=>array(['code'=>404,'message'=>'No se encuentra el usuario a la base de datos.'])],404);
   }
-  for ($i=0; $i < count($comments); $i++) {
 
-
-
-    if($comments[$i]["users"]->uspicture !=null){
-      $img2 = Image::make($comments[$i]["users"]->uspicture);
-
-      $comments[$i]["users"]->uspicture = base64_encode($img2->encode('png'));
-    }
-  }
   return response()->json(['status'=>'ok','data'=>$comments],200);
   // echo json_encode();
   //var_dump($this->comments->All());
@@ -112,6 +115,11 @@ public function showCommentsPost($comment)
   'comment' => $this->comments->All() ,
 ]);*/
 }
+/**
+* Guardar un registro en la bd si los parametros son correctos
+* @param  Request $request Contenido que nos pasa el usuario
+* @return json devuelve un json para pasarselo al cliente
+*/
 public function store(Request $request){
   //`id``facname``facdescription``facshortdescription`
   // Primero comprobaremos si estamos recibiendo todos los campos.
@@ -128,11 +136,7 @@ public function store(Request $request){
   // En $request->all() tendremos todos los campos del formulario recibidos.
   $newcomment=$this->comment->create($request);
 
-  if($newcomment["users"]->uspicture !=null){
-    $img2 = Image::make( $newcomment->uspicture);
 
-    $newcomment->uspicture = base64_encode($img2->encode('png'));
-  }
   // Más información sobre respuestas en http://jsonapi.org/format/
   // Devolvemos el código HTTP 201 Created – [Creada] Respuesta a un comment que resulta en una creación. Debería ser combinado con un encabezado Location, apuntando a la ubicación del nuevo recurso.
 
@@ -152,7 +156,7 @@ public function update(Request $request, $id)
   // Buscamos un fabricante por el id.
   ////`if (!$request->input('facname') || !$request->input('facdescription')|| !$request->input('facshortdescription') )
 
-  $comments=$this->comment->show($id)[0];
+  $comments=$this->comment->show($id);
   //if (!$request->input('user_id') || !$request->input('commentitle') || !$request->input('poscontent') || !$request->input('posdescription') || !$request->input('posphoto') || !$request->input('category_id') || !$request->input('posshortdesc'))
 
 
@@ -165,6 +169,7 @@ public function update(Request $request, $id)
   $comcontent=$request->input('comcontent');
   $user_id=$request->input('user_id');
   $post_id=$request->input('post_id');
+  $editable=$request->input('editable');
 
   // El método de la petición se sabe a través de $request->method();
   /*	Modelo		Longitud		Capacidad		Velocidad		Alcance */
@@ -183,6 +188,12 @@ public function update(Request $request, $id)
     if ($user_id)
     {
       $comments->user_id = $user_id;
+      $bandera=true;
+    }
+    // Actualización parcial de campos.
+    if ($editable)
+    {
+      $comments->editable = false;
       $bandera=true;
     }
     // Actualización parcial de campos.
@@ -229,6 +240,7 @@ public function update(Request $request, $id)
   $comments->comcomment = $comcomment;
   $comments->user_id = $user_id;
   $comments->post_id = $post_id;
+  $comments->editable = $editable;
   // Almacenamos en la base de datos el registro.
   $comments->save();
   return response()->json(['status'=>'ok','data'=>$comments], 200);
@@ -248,7 +260,7 @@ public function destroy($id)
   $comments=$this->comment->show($id);
 
   // Si no existe ese fabricante devolvemos un error.
-  if (count($comments) ==0)
+  if ($comments ==null)
   {
     // Se devuelve un array errors con los errores encontrados y cabecera HTTP 404.
     // En code podríamos indicar un código de error personalizado de nuestra aplicación si lo deseamos.
@@ -262,8 +274,8 @@ public function destroy($id)
 
 
   // Procedemos por lo tanto a eliminar el fabricante.
-  $comments[0]->comerased = true;
-  $comments[0]->save();
+  $comments->comerased = true;
+  $comments->save();
   // Se usa el código 204 No Content – [Sin Contenido] Respuesta a una petición exitosa que no devuelve un body (como una petición DELETE)
   // Este código 204 no devuelve body así que si queremos que se vea el mensaje tendríamos que usar un código de respuesta HTTP 200.
   return response()->json(['code'=>204,'message'=>'Se ha eliminado el usuario correctamente.'],204);

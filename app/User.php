@@ -3,7 +3,9 @@
 namespace App;
 
 use Illuminate\Foundation\Auth\User as Authenticatable;
-
+/**
+ * Classe de la tabla User
+ */
 class User extends Authenticatable
 {
     /**
@@ -29,4 +31,11 @@ class User extends Authenticatable
       // $this hace referencia al objeto que tengamos en ese momento de Avión.
       return $this->belongsTo('App\factions',"faction_id","id");
     }
+    public function countrys()
+    {
+      // 1 usuari te una facio.
+      // $this hace referencia al objeto que tengamos en ese momento de Avión.
+      return $this->belongsTo('App\countrys',"country_id","id");
+    }
+
 }

@@ -5,23 +5,46 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 
 use App\Http\Requests;
-
+//Utilizamos la classe Config para poder acceder a la configuracion del sistema y pedir el idioma predeterminado ahora mismo
+use Config;
 use App\Repositories\CharacterRepository;
 // Necesitamos la clase Response para crear la respuesta especial con la cabecera de localización en el método Store()
 use Response;
+//Necesitamos la classe response para utilizar el metodo de cache
+use Cache;
 // import the Intervention Image Manager Class
 use Intervention\Image\ImageManagerStatic as Image;
 class characterController extends Controller
 {
   protected $character;
-
+  /**
+  * Contructor que contienee el respositorio de personajes
+  * @param CharacterRepository $characters Clase que se encarga de contactar con el modelo y este a la base de datos
+  */
   function __construct(CharacterRepository $characters){
     $this->character = $characters;
+    $this->middleware('tokenauth',['only'=>['store','update','destroy']]);
+    $this->middleware('locale');
   }
+  /**
+  * Devuelve todo el contenido de la base de personajes transformado en json
+  * @param  Request $request Contenido que nos pasa el usuario
+  * @return json devuelve un json para pasarselo al cliente
+  */
   public function index(Request $request)
   {
 
-    $characters = $this->character->All();
+    $characters = null;
+
+    if (Config::get('app.locale') == 'es')
+    {
+      $characters = Cache::remember('characters',20/60, function()
+      {
+        return $this->character->All();
+      });
+    }else{
+      $characters =  $this->character->AllLAN(Config::get('app.locale'));
+    }
 
     // Si no existe ese fabricante devolvemos un error.
     if (count($characters)==0)
@@ -30,68 +53,42 @@ class characterController extends Controller
       // En code podríamos indicar un código de error personalizado de nuestra aplicación si lo deseamos.
       return response()->json(['errors'=>array(['code'=>404,'message'=>'No se encuentra el usuario a la base de datos.'])],404);
     }
-    for ($i=0; $i < count($characters); $i++) {
-
-      $img = Image::make($characters[$i]->charportrait);
-      //  $characters[$i]->charportrait =  base64_encode($img->encode('jpeg'));
-
-      $characters[$i]->charportrait =  base64_encode($img->encode('png'));
-      if($characters[$i]->charfacechar !=null){
-        $img = Image::make($characters[$i]->charfacechar);
-
-        $characters[$i]->charfacechar = base64_encode($img->encode('png'));
-      }
-
-    }
     return response()->json(['status'=>'ok','data'=>$characters],200);
-    // echo json_encode();
-    //var_dump($this->characters->All());
-    /*return view('character.index', [
-    'character' => $this->characters->All() ,
-
-
-
-    echo json_encode($this->character->All());
-    //var_dump($this->characters->All());
-    /*return view('character.index', [
-    'character' => $this->characters->All() ,
-  ]);*/
-}
-public function show($character)
-{
-  //
-  // return "Se muestra Fabricante con id: $id";
-  // Buscamos un fabricante por el id.
-  $characters=$this->character->show($character);
-
-  // Si no existe ese fabricante devolvemos un error.
-  if (count($characters)==0)
+  }
+  /**
+   * Metodo que se encarga de buscar por identificador y delvolver un json con el resultado
+   * @param  int $character identificador de recurso a buscar
+   * @return json            Devuelve json con el contenido del fichero
+   **/
+  public function show($character)
   {
-    // Se devuelve un array errors con los errores encontrados y cabecera HTTP 404.
-    // En code podríamos indicar un código de error personalizado de nuestra aplicación si lo deseamos.
-    return response()->json(['errors'=>array(['code'=>404,'message'=>'No se encuentra el usuario a la base de datos.'])],404);
-  }
-  for ($i=0; $i < count($characters); $i++) {
-
-    $img = Image::make($characters[$i]->charportrait);
-    //  $characters[$i]->charportrait =  base64_encode($img->encode('jpeg'));
-
-    $characters[$i]->charportrait =  base64_encode($img->encode('png'));
-    if($characters[$i]->charfacechar !=null){
-      $img = Image::make($characters[$i]->charfacechar);
-      $characters[$i]->charfacechar = base64_encode($img->encode('png'));
+    //
+    // return "Se muestra Fabricante con id: $id";
+    // Buscamos un fabricante por el id.
+    $characters=null;
+    if (Config::get('app.locale') == 'es')
+    {
+      $characters=$this->character->show($character);
+    }else{
+      $characters=$this->character->showLAN($character,Config::get('app.locale'));
     }
-    $img2 = Image::make($characters[$i]["factions"]->facphoto);
-    $characters[$i]["factions"]->facphoto =base64_encode($img2->encode('png'));
-  
-  }
+
+    // Si no existe ese fabricante devolvemos un error.
+    if ($characters ==null)
+    {
+      // Se devuelve un array errors con los errores encontrados y cabecera HTTP 404.
+      // En code podríamos indicar un código de error personalizado de nuestra aplicación si lo deseamos.
+      return response()->json(['errors'=>array(['code'=>404,'message'=>'No se encuentra el usuario a la base de datos.'])],404);
+    }
+
     return response()->json(['status'=>'ok','data'=>$characters],200);
-    // echo json_encode();
-    //var_dump($this->characters->All());
-    /*return view('character.index', [
-    'character' => $this->characters->All() ,
-  ]);*/
+
 }
+/**
+ * Metodo que se encarga de processar la peticion y guardar un objeto en bd
+ * @param  Request $request Contenido que envia el cliente
+ * @return [type]           Devuelve el contenido creado en el momento como confirmacion
+ */
 public function store(Request $request){
   //`id``facname``facdescription``facshortdescription`
   // Primero comprobaremos si estamos recibiendo todos los campos.
@@ -127,7 +124,7 @@ public function update(Request $request, $id)
   // Buscamos un fabricante por el id.
   ////`if (!$request->input('facname') || !$request->input('facdescription')|| !$request->input('facshortdescription') )
 
-  $characters=$this->character->show($id)[0];
+  $characters=$this->character->show($id);
   //if (!$request->input('user_id') || !$request->input('characteritle') || !$request->input('poscontent') || !$request->input('posdescription') || !$request->input('posphoto') || !$request->input('category_id') || !$request->input('posshortdesc'))
 
 
@@ -250,7 +247,7 @@ public function update(Request $request, $id)
 }
 
 /**
-* Remove the specified resource from storage.
+* Borrar contenido especifico.
 *
 * @param  int  $id
 * @return Response
@@ -259,10 +256,11 @@ public function destroy($id)
 {
   // Primero eliminaremos todos los aviones de un fabricante y luego el fabricante en si mismo.
   // Comprobamos si el fabricante que nos están pasando existe o no.
+
   $characters=$this->character->show($id);
 
   // Si no existe ese fabricante devolvemos un error.
-  if (count($characters) ==0)
+  if ($characters ==null)
   {
     // Se devuelve un array errors con los errores encontrados y cabecera HTTP 404.
     // En code podríamos indicar un código de error personalizado de nuestra aplicación si lo deseamos.

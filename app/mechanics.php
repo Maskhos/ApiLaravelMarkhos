@@ -3,7 +3,9 @@
 namespace App;
 
 use Illuminate\Database\Eloquent\Model;
-
+/**
+ * Classe de la tabla mechanics
+ */
 class mechanics extends Model
 {
   protected $fillable = [

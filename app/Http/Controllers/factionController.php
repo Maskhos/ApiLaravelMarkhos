@@ -8,24 +8,41 @@ use App\Http\Requests;
 use App\Repositories\FactionRepository;
 // Necesitamos la clase Response para crear la respuesta especial con la cabecera de localización en el método Store()
 use Response;
-// import the Intervention Image Manager Class
-use Intervention\Image\ImageManagerStatic as Image;
+use Config;
+use Cache;
 class factionController extends Controller
 {
   protected $faction;
-
+  /**
+   * Contructor que se encarga de dar valor al repostory y activar middlewares
+   * @param FactionRepository $factions repositorio de factions repository
+   */
   public function __construct(FactionRepository $factions)
   {
     //$this->middleware('auth');
     //var_dump($factions);
     $this->faction = $factions;
+    $this->middleware('tokenauth',['only'=>['store','update','destroy']]);
+    $this->middleware('locale');
   }
 
-
+  /**
+  * Devuelve todo el contenido de la base de personajes transformado en json
+  * @param  Request $request Contenido que nos pasa el usuario
+  * @return json devuelve un json para pasarselo al cliente
+  */
   public function index(Request $request)
   {
 
-    $factions = $this->faction->All();
+    $factions =null;
+    if (Config::get('app.locale') == 'es')
+    {
+      $factions =   Cache::remember('factions',20/60, function(){
+        return $this->faction->All();
+      });
+    }else{
+      $factions = $this->faction->AllLAN(Config::get('app.locale'));
+    }
     // Si no existe ese fabricante devolvemos un error.
     if (count($factions)==0)
     {
@@ -33,12 +50,7 @@ class factionController extends Controller
       // En code podríamos indicar un código de error personalizado de nuestra aplicación si lo deseamos.
       return response()->json(['errors'=>array(['code'=>404,'message'=>'No se encuentra el usuario a la base de datos.'])],404);
     }
-    for ($i=0; $i < count($factions); $i++) {
-      if($factions[$i]->facphoto!=null){
-        $img = Image::make($factions[$i]->facphoto);
-        $factions[$i]->facphoto =  base64_encode($img->encode('png'));
-      }
-    }
+
 
     return response()->json(['status'=>'ok','data'=>$factions],200);
     // echo json_encode();
@@ -54,34 +66,42 @@ class factionController extends Controller
     'faction' => $this->factions->All() ,
   ]);*/
 }
+/**
+* Devuelve todo el contenido de la base de factions segun identificador transformado en json
+* @param  Request $request Contenido que nos pasa el usuario
+* @return json devuelve un json para pasarselo al cliente
+*/
 public function show($faction)
 {
   //
   // return "Se muestra Fabricante con id: $id";
   // Buscamos un fabricante por el id.
-  $factions=$this->faction->show($faction);
-
-  // Si no existe ese fabricante devolvemos un error.
-  if (count($factions)==0)
-  {
-    // Se devuelve un array errors con los errores encontrados y cabecera HTTP 404.
-    // En code podríamos indicar un código de error personalizado de nuestra aplicación si lo deseamos.
-    return response()->json(['errors'=>array(['code'=>404,'message'=>'No se encuentra el usuario a la base de datos.'])],404);
+  $factions=null;
+  if(Config::get('app.locale') == 'es'){
+    $factions = $this->faction->show($faction);
+  }else{
+      $factions = $this->faction->showLAN($faction,Config::get('app.locale') );
   }
-  for ($i=0; $i < count($factions); $i++) {
-    if($factions[$i]->facphoto!=null){
-      $img = Image::make($factions[$i]->facphoto);
-      $factions[$i]->facphoto =  base64_encode($img->encode('png'));
+    // Si no existe ese fabricante devolvemos un error.
+    if ($factions==null)
+    {
+      // Se devuelve un array errors con los errores encontrados y cabecera HTTP 404.
+      // En code podríamos indicar un código de error personalizado de nuestra aplicación si lo deseamos.
+      return response()->json(['errors'=>array(['code'=>404,'message'=>'No se encuentra el usuario a la base de datos.'])],404);
     }
-  }
 
-  return response()->json(['status'=>'ok','data'=>$factions],200);
-  // echo json_encode();
-  //var_dump($this->factions->All());
-  /*return view('faction.index', [
-  'faction' => $this->factions->All() ,
-]);*/
+    return response()->json(['status'=>'ok','data'=>$factions],200);
+    // echo json_encode();
+    //var_dump($this->factions->All());
+    /*return view('faction.index', [
+    'faction' => $this->factions->All() ,
+  ]);*/
 }
+/**
+ * Se encarga de guardar el contenido a la bd
+ * @param  Request $request contenido que nos pasa el cliente
+ * @return object           devuelve el objeto en formato json 
+ */
 public function store(Request $request){
   //`id``facname``facdescription``facshortdescription`
   // Primero comprobaremos si estamos recibiendo todos los campos.

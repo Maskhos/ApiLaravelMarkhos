@@ -3,23 +3,46 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-
+use App;
 use App\Http\Requests;
-
+use Cache;
+use Config;
 use App\Repositories\CategoryRepository;
 // Necesitamos la clase Response para crear la respuesta especial con la cabecera de localización en el método Store()
 use Response;
 class categoryController extends Controller
 {
   protected $category;
+  /**
+   * Pasarle el repsitory de categorias y configurarlos middleware que se utilizaran
+   * @param CategoryRepository $categories [Repository de as categorias
+   */
 
   function __construct(CategoryRepository $categories){
-      $this->category = $categories;
+    $this->category = $categories;
+    $this->middleware('tokenauth',['only'=>['store','update','destroy']]);
+    $this->middleware('locale');
+
   }
+  /**
+   * [index Metodo que se encarga de pasar todos los datos de categorias de la base de datos y pasarlo a json para el uso de diferentes dispositvos]
+   * @param  Request $request [se le pasan las peticiones hechas el usuario en el request]
+   * @return [categorys]           [Devuelve un json con todas las categorias en la base de datos]
+   */
   public function index(Request $request)
   {
+    $categorys = null;
+    //Mirar el idioma del navegador para cambiar el contenido dinamicamente segun el header que nos pase el cliente
+    if (Config::get('app.locale') == 'es')
+    {
+      $categorys = Cache::remember('categorys',20/60, function()
+      {
+        return $this->category->All();
+      });
+    }else{
+      $categorys = $this->category->AllLAN(Config::get('app.locale'));
+    }
 
-    $categorys = $this->category->All();
     // Si no existe ese fabricante devolvemos un error.
     if (count($categorys)==0)
     {
@@ -29,28 +52,31 @@ class categoryController extends Controller
     }
 
     return response()->json(['status'=>'ok','data'=>$categorys],200);
-    // echo json_encode();
-    //var_dump($this->categorys->All());
-    /*return view('category.index', [
-    'category' => $this->categorys->All() ,
-
-
-
-    echo json_encode($this->category->All());
-    //var_dump($this->categorys->All());
-    /*return view('category.index', [
-    'category' => $this->categorys->All() ,
-  ]);*/
- }
- public function show($category)
- {
+}
+/**
+ * [show  Metodo que devuelve un json con los resultados deseados]
+ * @param  [int] $id [identificador de contenido a buscar]
+ * @return [json]     [devuelve un json con el contenido del contenido esoecifi]
+ */
+public function show($id)
+{
   //
   // return "Se muestra Fabricante con id: $id";
   // Buscamos un fabricante por el id.
-  $categorys=$this->category->show($category);
+
+
+
+  $categorys = $this->category->show($id);
+  if (Config::get('app.locale') == 'es')
+  {
+    $categorys = $this->category->show($id);
+  }else{
+    $categorys = $this->category->showLang($id,Config::get('app.locale'));
+  }
+
 
   // Si no existe ese fabricante devolvemos un error.
-  if (count($categorys)==0)
+  if ($categorys==null)
   {
     // Se devuelve un array errors con los errores encontrados y cabecera HTTP 404.
     // En code podríamos indicar un código de error personalizado de nuestra aplicación si lo deseamos.
@@ -62,12 +88,17 @@ class categoryController extends Controller
   //var_dump($this->categorys->All());
   /*return view('category.index', [
   'category' => $this->categorys->All() ,
- ]);*/
- }
- public function store(Request $request){
+]);*/
+}
+/**
+ * Metodo que se encarga de guardar el contenido que nos pasa el usuario a la bd
+ * @param  Request $request objecto con el contenido que nos ha pasado el usuario
+ * @return json           devuelve un json con el contenido deseado
+ */
+public function store(Request $request){
   //`id``facname``facdescription``facshortdescription`
   // Primero comprobaremos si estamos recibiendo todos los campos.
- //`id``charclass``charname``charbio``charbirthdate``charportrait``charstylecombat``faction_id``charfacechar``charerased`
+  //`id``charclass``charname``charbio``charbirthdate``charportrait``charstylecombat``faction_id``charfacechar``charerased`
   if (!$request->input('catname'))
   {
     // Se devuelve un array errors con los errores encontrados y cabecera HTTP 422 Unprocessable Entity – [Entidad improcesable] Utilizada para errores de validación.
@@ -85,15 +116,15 @@ class categoryController extends Controller
 
   $response = Response::make(json_encode(['data'=>$newcategory]), 201)->header('Location', 'http://www.dominio.local/fabricantes/'.$newcategory->id)->header('Content-Type', 'application/json');
   return $response;
- }
- /**
- * Update the specified resource in storage.
- *
- * @param  int  $id
- * @return Response
- */
- public function update(Request $request, $id)
- {
+}
+/**
+* Update the specified resource in storage.
+*
+* @param  int  $id
+* @return Response
+*/
+public function update(Request $request, $id)
+{
   //
   // return "Se muestra Fabricante con id: $id";
   // Buscamos un fabricante por el id.
@@ -166,16 +197,16 @@ class categoryController extends Controller
   $categorys->save();
   return response()->json(['status'=>'ok','data'=>$categorys], 200);
 
- }
+}
 
- /**
- * Remove the specified resource from storage.
- *
- * @param  int  $id
- * @return Response
- */
- public function destroy($id)
- {
+/**
+* Remove the specified resource from storage.
+*
+* @param  int  $id
+* @return Response
+*/
+public function destroy($id)
+{
   // Primero eliminaremos todos los aviones de un fabricante y luego el fabricante en si mismo.
   // Comprobamos si el fabricante que nos están pasando existe o no.
   $categorys=$this->category->show($id);
@@ -202,5 +233,5 @@ class categoryController extends Controller
   return response()->json(['code'=>204,'message'=>'Se ha eliminado el usuario correctamente.'],204);
 
 
- }
+}
 }

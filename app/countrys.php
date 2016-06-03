@@ -3,7 +3,9 @@
 namespace App;
 
 use Illuminate\Database\Eloquent\Model;
-
+/**
+ * Classe de la tabla countrys
+ */
 class countrys extends Model
 {
   protected $fillable = [

@@ -3,11 +3,13 @@
 namespace App;
 
 use Illuminate\Database\Eloquent\Model;
-
+/**
+ * Classe de la tabla comments
+ */
 class comments extends Model
 {
   protected $fillable = [
-    'id','comcontent','user_id','post_id',
+    'id','comcontent','user_id','post_id', 'editable',
   ];
 
   /**

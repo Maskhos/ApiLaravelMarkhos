@@ -7,43 +7,41 @@ use Illuminate\Http\Request;
 use App\Http\Requests;
 // Necesitamos la clase Response para crear la respuesta especial con la cabecera de localización en el método Store()
 use Response;
-
+use Cache;
 use App\Repositories\UserRepository;
 // import the Intervention Image Manager Class
 use Intervention\Image\ImageManagerStatic as Image;
 class UserController extends Controller
 {
   protected $user;
-
+  /**
+   * COntructor que se encarga de montar el repository y assignar los middleware
+   * @param UserRepository $user [description]
+   */
   public function __construct(UserRepository $user)
   {
     //$this->middleware('auth');
     //var_dump($factions);
     $this->user = $user;
+    $this->middleware('tokenauth',['only'=>['store','update','destroy']]);
   }
-
-
-  public function index(Request $request)
-  {
-
-    $users = $this->user->All();
+  /**
+   * Metodo que se encarga de mostrar todos los usuarios segun su faccion
+   * @param  int $faction identificador
+   * @return           Devuelve un json con el contenido deseado
+   */
+  public function byfaction($faction){
+    $users = null;
+    $users = $this->user->userFaction($faction);
     // Si no existe ese fabricante devolvemos un error.
+
     if (count($users)==0)
     {
       // Se devuelve un array errors con los errores encontrados y cabecera HTTP 404.
       // En code podríamos indicar un código de error personalizado de nuestra aplicación si lo deseamos.
       return response()->json(['errors'=>array(['code'=>404,'message'=>'No se encuentra el usuario a la base de datos.'])],404);
     }
-    for ($i=0; $i < count($users); $i++) {
-      if($users[$i]->uspicture!=null){
-        $img = Image::make($users[$i]->uspicture);
-        $users[$i]->uspicture =  base64_encode($img->encode('png'));
 
-        //  }
-      }
-      $img2 = Image::make($users[$i]["factions"]->facphoto);
-      $users[$i]["factions"]->facphoto =  base64_encode($img2->encode('png'));
-    }
     return response()->json(['status'=>'ok','data'=>$users],200);
     // echo json_encode();
     //var_dump($this->factions->All());
@@ -58,30 +56,62 @@ class UserController extends Controller
     'faction' => $this->factions->All() ,
   ]);*/
 }
-public function show($user)
+/**
+ * Devuelve todo el contenido de la bd
+ * @param  Request $request contenido introuducido por el cliente
+ * @return [type]           Devuelve un json
+ */
+public function index(Request $request)
 {
-  //
-  // return "Se muestra Fabricante con id: $id";
-  // Buscamos un fabricante por el id.
-  $users=$this->user->show($user);
 
+  $users = null;
+  $users = Cache::remember('posts',20/60, function(){
+    return $this->user->All();
+  });
   // Si no existe ese fabricante devolvemos un error.
+
   if (count($users)==0)
   {
     // Se devuelve un array errors con los errores encontrados y cabecera HTTP 404.
     // En code podríamos indicar un código de error personalizado de nuestra aplicación si lo deseamos.
     return response()->json(['errors'=>array(['code'=>404,'message'=>'No se encuentra el usuario a la base de datos.'])],404);
   }
-  for ($i=0; $i < count($users); $i++) {
-    if($users[$i]->uspicture!=null){
-      $img = Image::make($users[$i]->uspicture);
-      $users[$i]->uspicture =  base64_encode($img->encode('png'));
 
-      //  }
-    }
-    $img2 = Image::make($users[$i]["factions"]->facphoto);
-    $users[$i]["factions"]->facphoto =  base64_encode($img2->encode('png'));
+  return response()->json(['status'=>'ok','data'=>$users],200);
+  // echo json_encode();
+  //var_dump($this->factions->All());
+  /*return view('faction.index', [
+  'faction' => $this->factions->All() ,
+
+
+
+  echo json_encode($this->user->All());
+  //var_dump($this->factions->All());
+  /*return view('faction.index', [
+  'faction' => $this->factions->All() ,
+]);*/
+}
+/**
+ * Devuelve todo contenido de la bd segun identificador
+ * @param  int  $user identificador
+ * @return json       Devuelve json con el contenido designado
+ */
+public function show($user)
+{
+  //
+  // return "Se muestra Fabricante con id: $id";
+  // Buscamos un fabricante por el id.
+  $users=null;
+  $users =  $this->user->show($user);
+
+  // Si no existe ese fabricante devolvemos un error.
+  if ($users==null)
+  {
+    // Se devuelve un array errors con los errores encontrados y cabecera HTTP 404.
+    // En code podríamos indicar un código de error personalizado de nuestra aplicación si lo deseamos.
+    return response()->json(['errors'=>array(['code'=>404,'message'=>'No se encuentra el usuario a la base de datos.'])],404);
   }
+
 
   return response()->json(['status'=>'ok','data'=>$users],200);
   // echo json_encode();
@@ -90,7 +120,11 @@ public function show($user)
   'faction' => $this->factions->All() ,
 ]);*/
 }
-
+/**
+ * Devuelve el contenido si el login es correctp
+ * @param  Request $request COntenido que pasa el cliente
+ * @return json           Devuelve el json del usuario que se desea
+ */
 public function login(Request $request){
 
   if (!$request->input('email') || !$request->input('password'))
@@ -121,6 +155,11 @@ public function login(Request $request){
   return response()->json(['status'=>'ok','data'=>$users],200);
 
 }
+/**
+ * Metodo que se encarga de guardar el contenido de la bd
+ * @param  Request $request Contenido del cliente
+ * @return [type]           Devuelve el json
+ */
 public function store(Request $request){
   // Primero comprobaremos si estamos recibiendo todos los campos.
   //usname,userdesc,usbirthDate,faction_id,country_id,email,password
@@ -145,7 +184,11 @@ public function store(Request $request){
   return $response;
 }
 
-
+/**
+ * Metodo que se encarga de buscar de la bd segun su credenciales para la hora de iniciar session en la pagina wbeb
+ * @param  Request $request Contenido del cliente
+ * @return [type]           devuelve un json con el usuario si es correcto
+ */
 public function bycredentials(Request $request){
   //
   // return "Se muestra Fabricante con id: $id";
@@ -168,7 +211,12 @@ public function bycredentials(Request $request){
 ]);*/
 
 }
-
+/**
+ * Metodo que se utiliza para guardar el remember token
+ * @param  [type] $id    identificdor
+ * @param  [type] $token token
+ * @return [type]        Devuelve un json
+ */
 public function remember_token($id,$token){
   //
   // return "Se muestra Fabricante con id: $id";
@@ -192,7 +240,12 @@ public function remember_token($id,$token){
 
 
 }
-
+/**
+ * Metodo que se encarga de buscar el usuario por token
+ * @param  [type] $id    identificdor
+ * @param  [type] $token token
+ * @return [type]        Devuelve un json con el contenido
+ */
 public function bytoken($id,$token){
   //
   // return "Se muestra Fabricante con id: $id";
@@ -227,7 +280,7 @@ public function update(Request $request, $id, $type)
   //
   // return "Se muestra Fabricante con id: $id";
   // Buscamos un fabricante por el id.
-  $users=$this->user->show($id)[0];
+  $users=$this->user->show($id);
 
   if($users == null){
     return response()->json(['errors'=>array(['code'=>404,'message'=>'No se encuentra un avión con ese código asociado al usuario.'])],404);
@@ -246,7 +299,7 @@ public function update(Request $request, $id, $type)
   $usdesc=$request->input('usdesc');
   $usfacebook=$request->input('usfacebook');
   $email = $request->input('email');
-  $usintagram = $request->input('usinstagram');
+  $usinstagram = $request->input('usinstagram');
   // El método de la petición se sabe a través de $request->method();
   /*	Modelo		Longitud		Capacidad		Velocidad		Alcance */
   if ($type === 'PATCH')
@@ -280,7 +333,7 @@ public function update(Request $request, $id, $type)
 
     if ($ustumblr)
     {
-      $users->$ustumblr = $ustumblr;
+      $users->ustumblr = $ustumblr;
       $bandera=true;
     }
 
@@ -299,19 +352,14 @@ public function update(Request $request, $id, $type)
       $users->usfacebook = $usfacebook;
       $bandera=true;
     }
-    if ($usintagram)
+    if ($usinstagram)
     {
-      $users->usintagramtter = $usintagram;
+      $users->usinstagram = $usinstagram;
       $bandera=true;
     }
     if ($email)
     {
       $users->email = $email;
-      $bandera=true;
-    }
-    if ($usintagram)
-    {
-      $users->usintagram = $usintagram;
       $bandera=true;
     }
     if ($bandera)
